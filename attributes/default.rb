@@ -97,6 +97,12 @@ default["lita"]["packages"] = %w(
   libcurl4-gnutls-dev
 )
 
+# The init system to configure Lita for.
+# Valid values are 'runit', 'init' (for sysv init), and 'systemd'
+default['lita']['init_style'] =  value_for_platform_family(
+  'rhel' => { '>= 7.0' => 'systemd' }
+) || 'runit'
+
 # Set options for redis connection
 default["lita"]["redis_host"] = "127.0.0.1"
 default["lita"]["redis_port"] = 6379
@@ -114,12 +120,28 @@ default["lita"]["run_dir"]     = "/opt/lita/run"
 
 # daemon user - must already exist
 default["lita"]["daemon_user"] = "nobody"
-default["lita"]["daemon_group"] = "nogroup"
+default["lita"]["daemon_group"] = value_for_platform_family(
+    "debian" => "nogroup",
+    "rhel" => "nobody"
+  )
 
-# dependency install type:
-#
-# - auto: let the cookbook try to figure it out
-# - none: will be installed by other means and available in system path
-#
-default["lita"]["ruby_install_type"]  = "auto"
-default["lita"]["redis_install_type"] = "auto"
+# Platform-specific Redis package name
+default["lita"]["redis"]["package"] = value_for_platform_family(
+    "debian" => "redis-server",
+    "rhel" => "redis"
+  )
+
+# Ruby
+default["rvm"]["default_ruby"] = "ruby-2.2.2"
+default["rvm"]["user_default_ruby"] = "ruby-2.2.2"
+
+# runit
+# TODO: valid values here?
+default['lita']['runit']['finish'] = false
+default['lita']['runit']['env'] = {
+  'HOME' => node['lita']['install_dir'],
+  'PATH' => [node['languages']['ruby']['bin_dir'],
+             node['languages']['ruby']['gem_bin'],
+             node['languages']['ruby']['ruby_dir']
+             ].join(':')
+}

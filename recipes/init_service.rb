@@ -31,6 +31,8 @@ when 'init'
     supports :status => true, :restart => true
     action [:enable, :start]
   end
+when 'systemd'
+  true
 else
   include_recipe 'runit'
 

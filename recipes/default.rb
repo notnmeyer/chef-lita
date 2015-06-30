@@ -20,9 +20,17 @@
 # limitations under the License.
 #
 
+# Install dependencies
 include_recipe "apt::default" if node["platform_family"] == "debian"
 include_recipe "build-essential::default"
-include_recipe "lita::ruby"
-include_recipe "lita::redis"
-include_recipe "lita::install"
-include_recipe "lita::init_service"
+
+# Install Redis
+include_recipe "yum-epel" if node["platform_family"] == "rhel"
+package node["lita"]["redis"]["package"]
+
+# Install Ruby/RVM
+include_recipe "rvm::system"
+
+# Install Lita and configure the init service
+include_recipe "#{cookbook_name}::install"
+include_recipe "#{cookbook_name}::init_service"
